@@ -78,3 +78,64 @@ Assignment backtrack(T c) {
     }
     return failure;
 }
+
+int degreeHeuristic(const Assignment &a, const Graph &g) {
+    std::vector<int> degrees(a.size(), 0);
+    int maxDegree = 0;
+    for(int i=0; i<g.adjList.size(); i++) {
+        degrees[i] = g.adjList[i].size();
+        if(a[i] == 0 && maxDegree < degrees[i])
+            maxDegree = degrees[i];
+    }
+
+    std::vector<int> maxDegreeVars;
+    for(int i=0; i<a.size(); i++)
+        if(a[i] == 0 && degrees[i] == maxDegree)
+            maxDegreeVars.push_back(i);
+
+    if(maxDegreeVars.size() == 0)
+        return -1;
+
+    srand(time(NULL));
+    return maxDegreeVars[rand() % maxDegreeVars.size()];
+}
+
+int minimumRemainingValue(const Assignment &assignment, const std::vector< std::vector<int> > &domain) {
+    int mrv = domain.size()+1;
+    for(int i=0; i<domain.size(); i++)
+        if(assignment[i] == 0 && mrv > domain[i].size())
+            mrv = domain[i].size();
+
+    std::vector<int> minRemainingVars;
+    for(int i=0; i<assignment.size(); i++)
+        if(assignment[i] == 0 && domain[i].size() == mrv)
+            minRemainingVars.push_back(i);
+
+    if(minRemainingVars.size() == 0)
+        return -1;
+
+    srand(time(NULL));
+    return minRemainingVars[rand() % minRemainingVars.size()];
+}
+
+bool cmp(const std::pair<int,int> &a, const std::pair<int,int> &b) {
+    return a.second < b.second;
+}
+
+std::vector<int> leastConstrainingValue(const int &var, const std::vector< std::vector<int> > &domain, const Graph &graph) {
+    std::vector< std::pair<int, int> > domain_constraint(domain[var].size());
+    for(int i=0; i<domain[var].size(); i++) {
+        domain_constraint[i].first = domain[var][i];
+        domain_constraint[i].second = 0;
+        for(int j=0; j<graph.adjList[var].size(); j++)
+            if(std::find(domain[graph.adjList[var][j]].begin(), domain[graph.adjList[var][j]].end(), domain_constraint[i].first) != domain[graph.adjList[var][j]].end())
+                domain_constraint[i].second += 1;
+    }
+
+    sort(domain_constraint.begin(), domain_constraint.end(), cmp);
+
+    std::vector<int> ret;
+    for(int i=0; i<domain_constraint.size(); i++)
+        ret.push_back(domain_constraint[i].first);
+    return ret;
+}

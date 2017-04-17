@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <chrono>
 
 #include "csp.cpp"
 
@@ -32,6 +33,8 @@ private:
     void assignRandomValueUtility(int v, int value);
 };
 
+int CSPLocalSearch::selectUnassignmentVariable() {}
+vector<int> CSPLocalSearch::orderDomainValues(int var) {}
 bool CSPLocalSearch::inference(int var, int color){}
 
 CSPLocalSearch::CSPLocalSearch(int c, Graph g) : CSP(c, g) {
@@ -93,13 +96,6 @@ void CSPLocalSearch::updateConflicts() {
     }
 }
 
-int CSPLocalSearch::selectUnassignmentVariable() {
-    for(int i=0; i<assignment.size(); i++)
-        if(assignment[i] == 0)
-            return i;
-    return -1;
-}
-
 int CSPLocalSearch::conflictedVariable() {
     vector<int> cnf;
 //    int maxC = 0;
@@ -113,14 +109,6 @@ int CSPLocalSearch::conflictedVariable() {
         if(conflicted[i] > 0)
             cnf.push_back(i);
     return cnf[rand() % cnf.size()];
-}
-
-vector<int> CSPLocalSearch::orderDomainValues(int var) {
-    if(var < 0 || var >= graph.adjList.size()) {
-        cout<<"Exit from CSPLocalSearch::orderDomainValues"<<endl;
-        exit(EXIT_FAILURE);
-    }
-    return domain[var];
 }
 
 int CSPLocalSearch::minConflictsValue(int var) {
@@ -162,7 +150,10 @@ Assignment minConflicts(CSPLocalSearch *csp, int max_steps) {
 
     for(int i=0; i<max_steps; i++) {
         if(csp->isAssignmentSolution()) {
-            cout<<"Found solution at step "<<(i+1)<<".\n";
+            if(i == 0)
+                cout<<"Initial random assignment is the solution.\n";
+            else
+                cout<<"Found solution at step "<<i<<".\n";
             return csp->assignment;
         }
         int var = csp->conflictedVariable();
@@ -174,6 +165,10 @@ Assignment minConflicts(CSPLocalSearch *csp, int max_steps) {
 //        cout<<"Assignment: ";
 //        pa(csp->assignment);
         csp->updateConflicts();
+    }
+    if(csp->isAssignmentSolution()) {
+        cout<<"Found solution at step "<<(max_steps)<<".\n";
+        return csp->assignment;
     }
     return failure;
 }
@@ -188,27 +183,27 @@ Assignment localSearch(CSPLocalSearch &csp, int max_steps) {
 }
 
 int main() {
-    vector< vector<int> > adjList(7);
-    adjList[0].push_back(1);
-    adjList[0].push_back(2);
-    adjList[1].push_back(0);
-    adjList[1].push_back(2);
-    adjList[1].push_back(3);
-    adjList[2].push_back(0);
-    adjList[2].push_back(1);
-    adjList[2].push_back(3);
-    adjList[2].push_back(4);
-    adjList[2].push_back(5);
-    adjList[3].push_back(1);
-    adjList[3].push_back(2);
-    adjList[3].push_back(4);
-    adjList[4].push_back(2);
-    adjList[4].push_back(3);
-    adjList[4].push_back(5);
-    adjList[5].push_back(2);
-    adjList[5].push_back(4);
+//    vector< vector<int> > adjList(7);
+//    adjList[0].push_back(1);
+//    adjList[0].push_back(2);
+//    adjList[1].push_back(0);
+//    adjList[1].push_back(2);
+//    adjList[1].push_back(3);
+//    adjList[2].push_back(0);
+//    adjList[2].push_back(1);
+//    adjList[2].push_back(3);
+//    adjList[2].push_back(4);
+//    adjList[2].push_back(5);
+//    adjList[3].push_back(1);
+//    adjList[3].push_back(2);
+//    adjList[3].push_back(4);
+//    adjList[4].push_back(2);
+//    adjList[4].push_back(3);
+//    adjList[4].push_back(5);
+//    adjList[5].push_back(2);
+//    adjList[5].push_back(4);
 
-    Graph graph(adjList, true);
+    Graph graph("adjMatrix.txt");
 
     CSPLocalSearch csp(3, graph);
 
@@ -222,7 +217,11 @@ int main() {
 //    }
 
     int max_steps = 50;
+
+    auto start = std::chrono::high_resolution_clock::now();
     Assignment assignment = localSearch(csp, max_steps);
+    auto finish = std::chrono::high_resolution_clock::now();
+    float exeTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count(); // in ns
 
     if(csp.isAssignmentSolution()) {
         cout<<"Node\t->\tColor"<<endl;
@@ -233,6 +232,9 @@ int main() {
     } else {
         cout<<"Could not find solution in "<<max_steps<<" steps."<<endl;
     }
+
+    cout<<"\nExecution time: "<<exeTime / 1000000<<" ms.\n";
+
 	return 0;
 }
 

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <ctime>
+#include <algorithm>
 
 #include "graph.cpp"
 
@@ -13,7 +15,7 @@ class CSP {
 public:
     int colors;
     Graph graph;
-    std::vector<std::vector<int>> domain;
+    std::vector< std::vector<int> > domain;
     Assignment assignment; // 0 -> unassigned
 
     CSP(int colors, Graph graph);
@@ -33,5 +35,11 @@ protected:
 
 template<typename T>
 Assignment backtrack(T csp);
+
+int degreeHeuristic(const Assignment &assignment, const Graph &graph);
+
+int minimumRemainingValue(const Assignment &assignment, const std::vector< std::vector<int> > &domain);
+
+std::vector<int> leastConstrainingValue(const int &var, const std::vector< std::vector<int> > &domain, const Graph &graph);
 
 #endif // _CSP_H_
